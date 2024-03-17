@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Response, status, HTTPException, Depends
 from sqlalchemy.orm import Session
-from .. import schemas, models, database
+from .. import schemas, models, database, oauth2
 
 router = APIRouter(
     prefix="/posts",
@@ -17,7 +17,8 @@ async def get_all_posts(db: Session = Depends(database.get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
-async def create_posts(post: schemas.PostCreate, db: Session = Depends(database.get_db)):
+async def create_posts(post: schemas.PostCreate, db: Session = Depends(database.get_db), 
+                       current_user: int = Depends(oauth2.get_current_user)):
     
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
@@ -28,7 +29,8 @@ async def create_posts(post: schemas.PostCreate, db: Session = Depends(database.
 
 
 @router.get("/{id}", response_model=schemas.Post)
-async def get_post_by_id(id: int, db: Session = Depends(database.get_db)):
+async def get_post_by_id(id: int, db: Session = Depends(database.get_db),
+                         current_user: int = Depends(oauth2.get_current_user)):
     
     post =db.query(models.Post).filter(models.Post.id == id).first()
 
@@ -41,7 +43,8 @@ async def get_post_by_id(id: int, db: Session = Depends(database.get_db)):
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_post_by_id(id: int, db: Session = Depends(database.get_db)):
+async def delete_post_by_id(id: int, db: Session = Depends(database.get_db),
+                            current_user: int = Depends(oauth2.get_current_user)):
     
     post =db.query(models.Post).filter(models.Post.id == id)
 
@@ -56,7 +59,8 @@ async def delete_post_by_id(id: int, db: Session = Depends(database.get_db)):
 
 
 @router.put("/{id}", response_model=schemas.Post)
-async def update_post_by_id(id: int, updated_post: schemas.PostBase,db: Session = Depends(database.get_db)):
+async def update_post_by_id(id: int, updated_post: schemas.PostBase,db: Session = Depends(database.get_db),
+                            current_user: int = Depends(oauth2.get_current_user)):
     
     post_query =db.query(models.Post).filter(models.Post.id == id)
 
